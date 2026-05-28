@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitty Portal</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        /* BRAND JEWEL TONE DARK STYLING */
+        :root {
+            --bg-solid: #000000;          
+            --block-bg: #0b0c10;          
+            --pink-jewel: #d946ef;        
+            --teal-jewel: #0d9488;        
+            --text-main: #e2e8f0;         
+            --text-muted: #94a3b8;        
+            --orange-action: #ea580c;
+        }
+
+        body {
+            background-color: var(--bg-solid);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            background-image: 
+                linear-gradient(var(--teal-jewel) 1px, transparent 1px),
+                linear-gradient(90deg, var(--pink-jewel) 1px, transparent 1px);
+            background-size: 100px 100px;
+            background-color: rgba(0, 0, 0, 0.98);
+        }
+
+        .portal-layout {
+            max-width: 850px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .custom-block {
+            background: var(--block-bg);
+            border-radius: 4px; 
+            padding: 30px;
+            box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .pink-glow {
+            border: 2px solid var(--pink-jewel);
+            box-shadow: 0 0 15px rgba(217, 70, 239, 0.15);
+        }
+
+        .teal-glow {
+            border: 2px solid var(--teal-jewel);
+            box-shadow: 0 0 15px rgba(13, 148, 136, 0.15);
+        }
+
+        .identity-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+            margin-bottom: 10px;
+        }
+
+        .logo-text {
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            background: linear-gradient(to right, var(--teal-jewel), var(--pink-jewel));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .admin-toggle-link {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .auth-panel {
+            display: grid;
+            gap: 10px;
+            margin-top: -18px;
+        }
+
+        .auth-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 8px;
+        }
+
+        .auth-row input {
+            min-width: 0;
+            background: #050508;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            padding: 10px;
+            border-radius: 2px;
+            font: inherit;
+        }
+
+        .auth-btn {
+            background: var(--teal-jewel);
+            color: #fff;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.75rem;
+        }
+
+        .auth-btn.secondary {
+            background: var(--pink-jewel);
+            color: #050508;
+        }
+
+        .auth-status,
+        .checkout-status {
+            min-height: 20px;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+        .checkout-status {
+            margin-top: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .identity-bar {
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .auth-row {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-btn {
+                width: 100%;
+            }
+        }
+
+        /* BIG BROADCAST PICTURE CONTAINER */
+        .big-broadcast-frame {
+            width: 100%;
+            height: 400px;
+            background: #12131a;
+            border: 2px solid var(--teal-jewel);
+            box-shadow: 0 0 20px rgba(13, 148, 136, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .broadcast-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .broadcast-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 20px;
+        }
+
+        .upload-overlay-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--teal-jewel);
+            color: var(--teal-jewel);
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 2px;
+            display: none; 
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .pink-title { color: var(--pink-jewel); }
+        .teal-title { color: var(--teal-jewel); }
+
+        p {
+            line-height: 1.7;
+            color: var(--text-main);
+            margin-bottom: 16px;
+            font-size: 0.95rem;
+        }
+
+        .story-quote {
+            font-style: italic;
+            border-left: 3px solid var(--pink-jewel);
+            padding-left: 16px;
+            margin: 20px 0;
+            color: #ffffff;
+        }
+
+        .boundaries-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .boundaries-grid { grid-template-columns: 1fr; }
+        }
+
+        .grid-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 2px;
+        }
+
+        .grid-box h3 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .list-space {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .list-space li {
+            margin-bottom: 14px;
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .list-space strong {
+            color: #ffffff;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        /* WALL COMPOSER STYLE */
+        .interactive-composer {
+            background: #12131a;
+            border: 1px solid var(--pink-jewel);
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 2px;
+        }
+
+        .wall-input {
+            width: 100%;
+            background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px;
+            font-family: inherit;
+            resize: none;
+            height: 80px;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        .wall-btn {
+            background: var(--pink-jewel);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .feed-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .post-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 2px;
+        }
+
+        .post-card-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .reaction-bar {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 10px;
+        }
+
+        .react-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .react-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        /* FOOTER PAYMENT BOX */
+        .quiet-payment-zone {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .payment-buttons-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .private-trigger-btn {
+            background: var(--orange-action);
+            color: #ffffff;
+            border: none;
+            padding: 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 500px;
+            transition: background 0.2s ease;
+        }
+
+        .private-trigger-btn:hover {
+            background: #c2410c;
+        }
+
+        .private-trigger-btn:disabled,
+        .auth-btn:disabled {
+            opacity: 0.55;
+            cursor: wait;
+        }
+
+        .file-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .hidden-input { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="portal-layout">
+
+        <!-- HEADER NAME BAR -->
+        <div class="identity-bar">
+            <div class="logo-text">BITTY</div>
+            <div class="admin-toggle-link" id="signedInLabel">Customer Sign In</div>
+        </div>
+
+        <div class="auth-panel custom-block teal-glow">
+            <div class="auth-row" id="authControls">
+                <input type="email" id="authEmail" autocomplete="email" placeholder="Email address">
+                <input type="password" id="authPassword" autocomplete="current-password" placeholder="Password">
+                <button class="auth-btn" id="loginBtn">Sign In</button>
+                <button class="auth-btn secondary" id="signupBtn">Create Account</button>
+            </div>
+            <div class="auth-row" id="sessionControls" style="display: none; grid-template-columns: 1fr auto;">
+                <div class="auth-status" id="sessionSummary"></div>
+                <button class="auth-btn secondary" id="logoutBtn">Sign Out</button>
+            </div>
+            <div class="auth-status" id="authStatus"></div>
+        </div>
+
+        <!-- BIG BROADCAST PROFILE FRAME -->
+        <div class="big-broadcast-frame" id="broadcastFrame">
+            <div class="broadcast-placeholder" id="broadcastPlaceholder">
+                <p style="margin: 0; font-size: 1.1rem; color: var(--teal-jewel); font-weight: bold; letter-spacing: 2px;">[ BROADCASTING ME ]</p>
+                <p style="margin: 5px 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Owner picture space locked.</p>
+            </div>
+            <img src="" class="broadcast-img" id="broadcastImg" style="display: none;" alt="Bitty Main Broadcast Frame">
+            
+            <label class="upload-overlay-btn" id="broadcastUploadBtn">
+                Change My Main Picture
+                <input type="file" class="hidden-input" accept="image/*" onchange="uploadMainBroadcastPicture(this)">
+            </label>
+        </div>
+
+        <!-- THE "ABOUT ME" BACKSTORY -->
+        <div class="custom-block pink-glow">
+            <h2 class="pink-title">About Me</h2>
+            <p>
+                I chose to create this space to push myself outside my comfort zone, and maybe, over time, meet some new people. Mental health and human development are things I genuinely enjoy and take incredibly seriously—it's exactly what I'm going to school for. This path matters to me deeply, especially after recently losing someone close to me due to unresolved traumas and mental health struggles. It's something I am still actively trying to process myself.
+            </p>
+            <p>
+                I saw firsthand what trauma did to them because it was left unprocessed. Even while sitting in professional counseling, they still couldn't open up for whatever reason—maybe because they just didn't feel comfortable enough in that rigid environment. Keeping things locked inside has a devastating outcome. Sometimes people don't need a clinical clipboard watching them; they just need an actual, trustworthy human to talk to.
+            </p>
+            <p class="story-quote">
+                "I am completely non-judgmental. This is a strict judgment-free zone. I don't judge—I just watch, and people show you their directions over time, you know? That's all. I'm just here to give advice if that's what you want, or simply listen if you just need to vent and talk through whatever you're dealing with. Whether you need to unpack some heavy stuff, or honestly, just bullshit and talk about completely random nonsense because you don't want to feel isolated—you can do that here. If it's hard for you to trust, there is a completely anonymous way to use this space so you can protect your peace while you feel things out."
+            </p>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 15px;">
+                Honestly, I'm not going to lie about needing the extra income either—look at the gas prices and the cost of living nowadays, it’s ridiculous. I'm a single mom, a student, and I work, so the extra money helps. Because I’m balancing my kids, my schoolwork, and my job, phone calls just aren't feasible for my life. Plus, I can be super shy, straightforward, or very blunt depending on the day. Texting just makes the most sense for all of us to protect our time and space.
+            </p>
+        </div>
+
+        <!-- DISCLAIMERS BLOCK -->
+        <div class="custom-block pink-glow" style="border: 2px dashed var(--pink-jewel);">
+            <h2 class="pink-title" style="font-size: 1.1rem; letter-spacing: 2px;">⚠️ Important Notice & Boundaries</h2>
+            <p style="font-size: 0.85rem; color: #ffffff; line-height: 1.6; margin-bottom: 0;">
+                <strong>Text-Based Peer Support Notice:</strong> This platform is strictly an informal, text-based peer support space designed for personal venting, sharing life perspectives, and talking through things. While I am currently a college student studying human development and family dynamics, I am <strong>not</strong> a licensed counselor, therapist, or medical mental health professional. The text conversations here are just person-to-person talks. They are not a substitute for professional clinical therapy or medical treatment. If you are experiencing a severe mental health crisis, an emergency, or having thoughts of self-harm, please exit this page immediately and call a certified professional emergency hotline or dial 988.
+            </p>
+        </div>
+
+        <!-- REAL BOUNDARIES MAP -->
+        <div class="custom-block teal-glow">
+            <h2 class="teal-title">Reality & Boundaries</h2>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
+                Let's be completely real: I am not going to magically decode your entire life or recognize every pattern in a single text conversation. That's just not realistic. But here is who I am and how I operate:
+            </p>
+
+            <div class="boundaries-grid">
+                <div class="grid-box" style="border-left: 2px solid var(--teal-jewel);">
+                    <h3 style="color: var(--teal-jewel);">👁️ My Radar (What I Do)</h3>
+                    <ul class="list-space">
+                        <li><strong>Spot the Loops:</strong> If you are stuck in a repeating relationship mess, I excel at zooming out to spot the behavioral patterns you might be blind to.</li>
+                        <li><strong>Read Intentions:</strong> Hard childhood experiences taught me how to read whether people mean well or mean harm. It's a blessing and a curse, but I'll give it to you straight.</li>
+                        <li><strong>Deep Reflector:</strong> I break down processing loops cleanly, providing space for raw honesty.</li>
+                        <li><strong>Listen Securely:</strong> If you need to heavy-dump 30 minutes of complete nonsense or deep pain without an awkward phone call, my text window is a secure vault.</li>
+                    </ul>
+                </div>
+
+                <div class="grid-box" style="border-left: 2px solid var(--pink-jewel);">
+                    <h3 style="color: var(--pink-jewel);">🚫 My Limits (What I Don't Do)</h3>
+                    <ul class="list-space">
+                        <li><strong>No Faked Knowledge:</strong> I don't know everything about everything. If you bring me something outside my wheelhouse, I will tell you flat out.</li>
+                        <li><strong>Not Professional Therapy:</strong> I am a student, but I am NOT a licensed professional right now. This is a peer support space. No crisis therapy.</li>
+                        <li><strong>No Inappropriate BS:</strong> Treat me with the exact respect you want back. Bring disrespect or explicit nonsense, and the text session ends immediately. Period.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- INTERACTIVE OPEN FEED WALL -->
+        <div class="custom-block pink-glow">
+            <h2 class="pink-title">The Shared Community Wall</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Post a message, drop a meme, share a photo frame, or see what others are throwing down. Leave a reaction below any post to lock in your energy.</p>
+
+            <div class="interactive-composer">
+                <span id="composerLabel" style="font-size: 0.75rem; color: var(--teal-jewel); font-weight: bold; display: block; margin-bottom: 5px;">ADD TO THE COMMUNITY FEED:</span>
+                <textarea id="publicPostInput" class="wall-input" placeholder="Drop a thought, paste a meme description, or say what's on your mind..."></textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label class="file-label">
+                        [Attach Photo / Meme Asset]
+                        <input type="file" id="publicPhotoInput" class="hidden-input" accept="image/*" onchange="handlePostPhotoLoad(this)">
+                    </label>
+                    <button class="wall-btn" onclick="publishCommunityPost()">Publish to Wall</button>
+                </div>
+                <span id="postPhotoNotice" style="font-size: 0.7rem; color: var(--pink-jewel); display: block; margin-top: 5px;"></span>
+            </div>
+
+            <!-- Dynamic Stream Feed -->
+            <div class="feed-stream" id="publicFeedStream">
+                <div class="post-card">
+                    <div style="font-size: 0.75rem; color: var(--pink-jewel); margin-bottom: 8px;"><strong>Bitty [Owner]</strong> • Shared Update</div>
+                    <div class="post-card-text">Welcome to our space. I’m currently gathering my poetry pieces, daily memes, and nature photography captures to throw up here. Now that the wall is open, feel free to share your own pictures or thoughts right alongside me!</div>
+                    <div class="reaction-bar">
+                        <button class="react-btn" onclick="incrementReaction(this)">👁️ <span class="count">4</span></button>
+                        <button class="react-btn" onclick="incrementReaction(this)">🖤 <span class="count">9</span></button>
+                        <button class="react-btn" onclick="incrementReaction(this)">🔥 <span class="count">3</span></button>
+                        <button class="react-btn" onclick="incrementReaction(this)">💭 <span class="count">6</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIVATE TEXT SESSION ZONE -->
+            <div class="quiet-payment-zone">
+                <h2 class="teal-title" style="font-size: 1.2rem; margin-bottom: 5px;">Activate a Text Session</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 500px; margin: 0 auto 15px auto;">
+                    Sessions are text-only to fit busy schedules. Need a safe, masked peer support outlet to vent, get straightforward advice, or just bullshit? Select your timeline below.
+                </p>
+                <div class="payment-buttons-container">
+                    <button class="private-trigger-btn checkout-btn" onclick="triggerStripePipeline('30min')">
+                        Lock in 30-Minute Text Session ($25)
+                    </button>
+                    <button class="private-trigger-btn checkout-btn" onclick="triggerStripePipeline('60min')" style="background: var(--teal-jewel);">
+                        Lock in 60-Minute Text Session ($45)
+                    </button>
+                </div>
+                <div class="checkout-status" id="checkoutStatus"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import {
+            AuthError,
+            MissingIdentityError,
+            getUser,
+            handleAuthCallback,
+            login,
+            logout,
+            signup
+        } from 'https://esm.sh/@netlify/identity@1.2.0';
+
+        let isAdminAuthenticated = false;
+        let cachedPostPhoto = null;
+        let currentUser = null;
+
+        window.onload = async function() {
+            const savedMainPic = localStorage.getItem('bitty_broadcast_pic');
+            if (savedMainPic) {
+                document.getElementById('broadcastPlaceholder').style.display = 'none';
+                const img = document.getElementById('broadcastImg');
+                img.src = savedMainPic;
+                img.style.display = 'block';
+            }
+            wireAuthControls();
+            await initializeIdentity();
+        };
+
+        function wireAuthControls() {
+            document.getElementById('loginBtn').addEventListener('click', handleLogin);
+            document.getElementById('signupBtn').addEventListener('click', handleSignup);
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+        }
+
+        async function initializeIdentity() {
+            setAuthStatus('Checking account session...');
+            try {
+                const callbackResult = await handleAuthCallback();
+                if (callbackResult?.type === 'confirmation') {
+                    setAuthStatus('Email confirmed. You are signed in.');
+                } else if (callbackResult?.type === 'recovery') {
+                    setAuthStatus('Password recovery was confirmed. Please finish updating your password from the email flow.');
+                }
+                currentUser = callbackResult?.user || await getUser();
+                renderAuthState();
+                if (!callbackResult) setAuthStatus(currentUser ? 'Signed in.' : 'Sign in or create an account to track your session.');
+            } catch (error) {
+                handleAuthError(error, 'Identity is not ready for this site yet.');
+            }
+        }
+
+        async function handleLogin() {
+            const { email, password } = getAuthFields();
+            if (!email || !password) {
+                setAuthStatus('Enter an email and password to sign in.');
+                return;
+            }
+            setAuthLoading(true);
+            try {
+                currentUser = await login(email, password);
+                renderAuthState();
+                setAuthStatus('Signed in successfully.');
+            } catch (error) {
+                handleAuthError(error, 'Unable to sign in.');
+            } finally {
+                setAuthLoading(false);
+            }
+        }
+
+        async function handleSignup() {
+            const { email, password } = getAuthFields();
+            if (!email || !password) {
+                setAuthStatus('Enter an email and password to create an account.');
+                return;
+            }
+            setAuthLoading(true);
+            try {
+                currentUser = await signup(email, password);
+                renderAuthState();
+                setAuthStatus(currentUser.emailVerified ? 'Account created and signed in.' : 'Account created. Check your email to confirm it before signing in.');
+            } catch (error) {
+                handleAuthError(error, 'Unable to create the account.');
+            } finally {
+                setAuthLoading(false);
+            }
+        }
+
+        async function handleLogout() {
+            setAuthLoading(true);
+            try {
+                await logout();
+                currentUser = null;
+                isAdminAuthenticated = false;
+                renderAuthState();
+                setAuthStatus('Signed out.');
+            } catch (error) {
+                handleAuthError(error, 'Unable to sign out.');
+            } finally {
+                setAuthLoading(false);
+            }
+        }
+
+        function getAuthFields() {
+            return {
+                email: document.getElementById('authEmail').value.trim(),
+                password: document.getElementById('authPassword').value
+            };
+        }
+
+        function renderAuthState() {
+            const signedIn = Boolean(currentUser);
+            document.getElementById('authControls').style.display = signedIn ? 'none' : 'grid';
+            document.getElementById('sessionControls').style.display = signedIn ? 'grid' : 'none';
+            document.getElementById('signedInLabel').innerText = signedIn ? 'Signed In' : 'Customer Sign In';
+            document.getElementById('sessionSummary').innerText = signedIn ? `Signed in as ${currentUser.email}` : '';
+            document.getElementById('broadcastUploadBtn').style.display = isAdminAuthenticated ? 'block' : 'none';
+            document.getElementById('composerLabel').innerText = isAdminAuthenticated ? 'BITTY POWER CONSOLE: PUBLISHING AS OWNER' : 'ADD TO THE COMMUNITY FEED:';
+            document.getElementById('composerLabel').style.color = isAdminAuthenticated ? 'var(--pink-jewel)' : 'var(--teal-jewel)';
+        }
+
+        function setAuthStatus(message) {
+            document.getElementById('authStatus').innerText = message;
+        }
+
+        function setAuthLoading(isLoading) {
+            document.getElementById('loginBtn').disabled = isLoading;
+            document.getElementById('signupBtn').disabled = isLoading;
+            document.getElementById('logoutBtn').disabled = isLoading;
+        }
+
+        function handleAuthError(error, fallbackMessage) {
+            if (error instanceof MissingIdentityError) {
+                setAuthStatus('Customer sign in is not enabled for this site yet.');
+                return;
+            }
+            if (error instanceof AuthError) {
+                if (error.status === 401) {
+                    setAuthStatus('Invalid email or password.');
+                    return;
+                }
+                if (error.status === 422) {
+                    setAuthStatus('Check the email address and password, then try again.');
+                    return;
+                }
+                setAuthStatus(error.message || fallbackMessage);
+                return;
+            }
+            setAuthStatus(fallbackMessage);
+        }
+
+        window.toggleAdminView = function() {
+            isAdminAuthenticated = !isAdminAuthenticated;
+            const uploadBtn = document.getElementById('broadcastUploadBtn');
+            const label = document.getElementById('composerLabel');
+
+            if (isAdminAuthenticated) {
+                uploadBtn.style.display = 'block';
+                label.innerText = "BITTY POWER CONSOLE: PUBLISHING AS OWNER";
+                label.style.color = "var(--pink-jewel)";
+                alert("Identity confirmed: Welcome back, Bitty. Profile picture controls unlocked.");
+            } else {
+                uploadBtn.style.display = 'none';
+                label.innerText = "ADD TO THE COMMUNITY FEED:";
+                label.style.color = "var(--teal-jewel)";
+                alert("Logged out of owner tools.");
+            }
+        }
+
+        window.uploadMainBroadcastPicture = function(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    localStorage.setItem('bitty_broadcast_pic', e.target.result);
+                    document.getElementById('broadcastPlaceholder').style.display = 'none';
+                    const img = document.getElementById('broadcastImg');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    alert("Your broadcast profile image has been successfully set!");
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        window.handlePostPhotoLoad = function(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    cachedPostPhoto = e.target.result;
+                    document.getElementById('postPhotoNotice').innerText = "✓ Media attached successfully.";
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        window.publishCommunityPost = function() {
+            const copy = document.getElementById('publicPostInput').value.trim();
+            const stream = document.getElementById('publicFeedStream');
+
+            if (!copy && !cachedPostPhoto) return;
+
+            let authorName = "Visitor";
+            if (isAdminAuthenticated) {
+                authorName = "Bitty [Owner]";
+            } else {
+                let visitorSessionName = localStorage.getItem('bitty_nickname');
+                if (!visitorSessionName) {
+                    visitorSessionName = prompt("Choose a name for the wall (Leave blank to remain anonymous):");
+                    if (visitorSessionName === null) return; 
+                    if (visitorSessionName.trim() === "") visitorSessionName = "Anonymous Visitor";
+                    localStorage.setItem('bitty_nickname', visitorSessionName);
+                }
+                authorName = visitorSessionName;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'post-card';
+
+            let imgElement = cachedPostPhoto ? `<img src="${cachedPostPhoto}" style="width:100%; max-height:450px; object-fit:contain; border-radius:2px; margin-top:12px; border:1px solid rgba(255,255,255,0.05);" alt="Feed Asset">` : '';
+            let labelColor = isAdminAuthenticated ? 'var(--pink-jewel)' : 'var(--teal-jewel)';
+
+            card.innerHTML = `
+                <div style="font-size: 0.75rem; color: ${labelColor}; margin-bottom: 8px;"><strong>${authorName}</strong> • Just Now</div>
+                <div class="post-card-text">${copy}</div>
+                ${imgElement}
+                <div class="reaction-bar">
+                    <button class="react-btn" onclick="incrementReaction(this)">👁️ <span class="count">0</span></button>
+                    <button class="react-btn" onclick="incrementReaction(this)">🖤 <span class="count">0</span></button>
+                    <button class="react-btn" onclick="incrementReaction(this)">🔥 <span class="count">0</span></button>
+                    <button class="react-btn" onclick="incrementReaction(this)">💭 <span class="count">0</span></button>
+                </div>
+            `;
+
+            stream.insertBefore(card, stream.firstChild);
+            document.getElementById('publicPostInput').value = '';
+            document.getElementById('postPhotoNotice').innerText = '';
+            cachedPostPhoto = null;
+        }
+
+        window.incrementReaction = function(buttonElement) {
+            let visitorSessionName = localStorage.getItem('bitty_nickname');
+            if (!visitorSessionName) {
+                visitorSessionName = prompt("Choose a name to react (Leave blank to stay anonymous):");
+                if (visitorSessionName === null) return; 
+                if (visitorSessionName.trim() === "") visitorSessionName = "Anonymous Visitor";
+                localStorage.setItem('bitty_nickname', visitorSessionName);
+            }
+
+            const countNode = buttonElement.querySelector('.count');
+            let currentCount = parseInt(countNode.innerText);
+            countNode.innerText = currentCount + 1;
+            
+            buttonElement.style.color = "var(--pink-jewel)";
+        }
+
+        window.triggerStripePipeline = async function(durationType) {
+            const checkoutStatus = document.getElementById('checkoutStatus');
+            const checkoutButtons = document.querySelectorAll('.checkout-btn');
+            checkoutStatus.innerText = 'Opening secure checkout...';
+            checkoutButtons.forEach((button) => button.disabled = true);
+            try {
+                const response = await fetch('/.netlify/functions/create-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ duration: durationType })
+                });
+                const data = await response.json();
+                if (response.ok && data.url) {
+                    window.location.href = data.url;
+                } else {
+                    checkoutStatus.innerText = "Checkout error: " + (data.error || 'Unable to start checkout.');
+                }
+            } catch (err) {
+                console.error(err);
+                checkoutStatus.innerText = "Network error reaching checkout.";
+            } finally {
+                checkoutButtons.forEach((button) => button.disabled = false);
+            }
+        }
+    </script>
+</body>
+</html>

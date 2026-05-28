@@ -1,0 +1,8 @@
+{
+  "name": "bitty-portal",
+  "version": "1.0.0",
+  "dependencies": {
+    "@netlify/identity": "^1.2.0",
+    "stripe": "^14.0.0"
+  }
+}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Confirmed | Bitty Portal</title>
+    <style>
+        :root {
+            --bg-solid: #000000;
+            --block-bg: #0b0c10;
+            --pink-jewel: #d946ef;
+            --teal-jewel: #0d9488;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            background-color: var(--bg-solid);
+            background-image:
+                linear-gradient(var(--teal-jewel) 1px, transparent 1px),
+                linear-gradient(90deg, var(--pink-jewel) 1px, transparent 1px);
+            background-size: 100px 100px;
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        main {
+            width: min(100%, 620px);
+            background: var(--block-bg);
+            border: 2px solid var(--teal-jewel);
+            box-shadow: 0 0 20px rgba(13, 148, 136, 0.2);
+            border-radius: 4px;
+            padding: 32px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--teal-jewel);
+            margin: 0 0 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: clamp(1.5rem, 4vw, 2.25rem);
+        }
+
+        p {
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin: 0 0 22px;
+        }
+
+        a {
+            display: inline-block;
+            background: var(--pink-jewel);
+            color: #000;
+            text-decoration: none;
+            font-weight: 700;
+            padding: 12px 18px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Session Confirmed</h1>
+        <p>Your checkout was completed. Please return to the portal and watch for the next message with session details.</p>
+        <a href="/">Back to Bitty Portal</a>
+    </main>
+</body>
+</html>
