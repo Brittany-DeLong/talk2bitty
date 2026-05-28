@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bitty Portal</title>
@@ -389,8 +390,10 @@
     </style>
 </head>
 <body>
-
     <div class="portal-layout">
+        <div style="text-align:center; margin-top:20px;">
+            <button onclick="window.netlifyIdentity && netlifyIdentity.open()">Sign In / Sign Up</button>
+        </div>
 
         <!-- HEADER NAME BAR -->
         <div class="identity-bar">
@@ -532,17 +535,7 @@
 
     </div>
 
-    <script type="module">
-        import {
-            AuthError,
-            MissingIdentityError,
-            getUser,
-            handleAuthCallback,
-            login,
-            logout,
-            signup
-        } from 'https://esm.sh/@netlify/identity@1.2.0';
-
+    <script>
         let isAdminAuthenticated = false;
         let cachedPostPhoto = null;
         let currentUser = null;
@@ -567,77 +560,65 @@
 
         async function initializeIdentity() {
             setAuthStatus('Checking account session...');
-            try {
-                const callbackResult = await handleAuthCallback();
-                if (callbackResult?.type === 'confirmation') {
-                    setAuthStatus('Email confirmed. You are signed in.');
-                } else if (callbackResult?.type === 'recovery') {
-                    setAuthStatus('Password recovery was confirmed. Please finish updating your password from the email flow.');
-                }
-                currentUser = callbackResult?.user || await getUser();
+            if (!window.netlifyIdentity) {
                 renderAuthState();
-                if (!callbackResult) setAuthStatus(currentUser ? 'Signed in.' : 'Sign in or create an account to track your session.');
-            } catch (error) {
-                handleAuthError(error, 'Identity is not ready for this site yet.');
-            }
-        }
-
-        async function handleLogin() {
-            const { email, password } = getAuthFields();
-            if (!email || !password) {
-                setAuthStatus('Enter an email and password to sign in.');
+                setAuthStatus('Customer sign in is not ready. Reload the page and try again.');
                 return;
             }
-            setAuthLoading(true);
-            try {
-                currentUser = await login(email, password);
+
+            netlifyIdentity.on('init', function(user) {
+                currentUser = user;
+                renderAuthState();
+                setAuthStatus(user ? 'Signed in.' : 'Sign in or create an account to track your session.');
+            });
+
+            netlifyIdentity.on('login', function(user) {
+                console.log("Logged in:", user);
+                currentUser = user;
+                netlifyIdentity.close();
                 renderAuthState();
                 setAuthStatus('Signed in successfully.');
-            } catch (error) {
-                handleAuthError(error, 'Unable to sign in.');
-            } finally {
-                setAuthLoading(false);
-            }
-        }
+                window.location.href = "/dashboard.html";
+            });
 
-        async function handleSignup() {
-            const { email, password } = getAuthFields();
-            if (!email || !password) {
-                setAuthStatus('Enter an email and password to create an account.');
-                return;
-            }
-            setAuthLoading(true);
-            try {
-                currentUser = await signup(email, password);
-                renderAuthState();
-                setAuthStatus(currentUser.emailVerified ? 'Account created and signed in.' : 'Account created. Check your email to confirm it before signing in.');
-            } catch (error) {
-                handleAuthError(error, 'Unable to create the account.');
-            } finally {
-                setAuthLoading(false);
-            }
-        }
-
-        async function handleLogout() {
-            setAuthLoading(true);
-            try {
-                await logout();
+            netlifyIdentity.on('logout', function() {
                 currentUser = null;
                 isAdminAuthenticated = false;
                 renderAuthState();
                 setAuthStatus('Signed out.');
-            } catch (error) {
-                handleAuthError(error, 'Unable to sign out.');
-            } finally {
-                setAuthLoading(false);
-            }
+            });
+
+            netlifyIdentity.on('error', function(error) {
+                setAuthStatus(error?.message || 'Identity is not ready for this site yet.');
+            });
+
+            netlifyIdentity.init();
         }
 
-        function getAuthFields() {
-            return {
-                email: document.getElementById('authEmail').value.trim(),
-                password: document.getElementById('authPassword').value
-            };
+        function handleLogin() {
+            if (!window.netlifyIdentity) {
+                setAuthStatus('Customer sign in is not ready. Reload the page and try again.');
+                return;
+            }
+            netlifyIdentity.open('login');
+        }
+
+        function handleSignup() {
+            if (!window.netlifyIdentity) {
+                setAuthStatus('Customer sign in is not ready. Reload the page and try again.');
+                return;
+            }
+            netlifyIdentity.open('signup');
+        }
+
+        function handleLogout() {
+            if (!window.netlifyIdentity) {
+                setAuthStatus('Customer sign in is not ready. Reload the page and try again.');
+                return;
+            }
+            setAuthLoading(true);
+            netlifyIdentity.logout();
+            setAuthLoading(false);
         }
 
         function renderAuthState() {
@@ -659,26 +640,6 @@
             document.getElementById('loginBtn').disabled = isLoading;
             document.getElementById('signupBtn').disabled = isLoading;
             document.getElementById('logoutBtn').disabled = isLoading;
-        }
-
-        function handleAuthError(error, fallbackMessage) {
-            if (error instanceof MissingIdentityError) {
-                setAuthStatus('Customer sign in is not enabled for this site yet.');
-                return;
-            }
-            if (error instanceof AuthError) {
-                if (error.status === 401) {
-                    setAuthStatus('Invalid email or password.');
-                    return;
-                }
-                if (error.status === 422) {
-                    setAuthStatus('Check the email address and password, then try again.');
-                    return;
-                }
-                setAuthStatus(error.message || fallbackMessage);
-                return;
-            }
-            setAuthStatus(fallbackMessage);
         }
 
         window.toggleAdminView = function() {

@@ -53,12 +53,18 @@ export default async function handler(req) {
   try {
     const body = await req.json().catch(() => ({}));
     const duration = allowedDurations.has(body.duration) ? body.duration : '30min';
+    const customerEmail = typeof body.email === 'string' ? body.email.trim() : '';
     const baseUrl = getBaseUrl(req);
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2026-02-25.clover',
+    });
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
+      phone_number_collection: {
+        enabled: true,
+      },
       line_items: [
         {
           price: getPriceId(duration),
@@ -66,9 +72,12 @@ export default async function handler(req) {
         },
       ],
       success_url: `${baseUrl}/success.html`,
-      cancel_url: `${baseUrl}/`,
+      cancel_url: `${baseUrl}/dashboard.html`,
+      customer_email: customerEmail || undefined,
       metadata: {
         duration,
+        customerEmail,
+        smsConsent: 'Phone number entered at checkout and purchase completed for paid peer support session texts.',
       },
     });
 

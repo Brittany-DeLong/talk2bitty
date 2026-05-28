@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitty Dashboard</title>
+    <style>
+        :root {
+            --bg-solid: #000000;
+            --block-bg: #0b0c10;
+            --panel-bg: #12131a;
+            --pink-jewel: #d946ef;
+            --teal-jewel: #0d9488;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --orange-action: #ea580c;
+        }
+
+        body {
+            background-color: var(--bg-solid);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 24px;
+            min-height: 100vh;
+            box-sizing: border-box;
+            background-image:
+                linear-gradient(var(--teal-jewel) 1px, transparent 1px),
+                linear-gradient(90deg, var(--pink-jewel) 1px, transparent 1px);
+            background-size: 100px 100px;
+        }
+
+        .dashboard {
+            max-width: 860px;
+            margin: 0 auto;
+            display: grid;
+            gap: 22px;
+        }
+
+        .panel {
+            background: var(--block-bg);
+            border: 2px solid var(--teal-jewel);
+            border-radius: 4px;
+            padding: 24px;
+            box-shadow: 0 0 18px rgba(13, 148, 136, 0.18);
+        }
+
+        .panel.pink {
+            border-color: var(--pink-jewel);
+            box-shadow: 0 0 18px rgba(217, 70, 239, 0.16);
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        h1,
+        h2 {
+            margin: 0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            color: var(--teal-jewel);
+            font-size: 2rem;
+        }
+
+        h2 {
+            color: var(--pink-jewel);
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 8px 0 0;
+        }
+
+        .status {
+            min-height: 22px;
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .actions,
+        .payment-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        button,
+        a {
+            background: var(--pink-jewel);
+            color: #050508;
+            border: none;
+            border-radius: 3px;
+            padding: 12px 16px;
+            font: inherit;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: wait;
+        }
+
+        .primary-pay {
+            background: var(--orange-action);
+            color: #fff;
+            min-width: 230px;
+        }
+
+        .secondary-pay {
+            background: var(--teal-jewel);
+            color: #fff;
+            min-width: 230px;
+        }
+
+        .outline {
+            background: transparent;
+            color: var(--teal-jewel);
+            border: 1px solid var(--teal-jewel);
+        }
+
+        .text-box {
+            background: var(--panel-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            padding: 16px;
+            margin-top: 14px;
+        }
+
+        .consent-note {
+            color: var(--text-muted);
+            font-size: 0.86rem;
+            margin-top: 14px;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 14px;
+            }
+
+            .topbar,
+            .actions,
+            .payment-grid {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            button,
+            a {
+                width: 100%;
+                box-sizing: border-box;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="dashboard">
+        <section class="panel">
+            <div class="topbar">
+                <div>
+                    <h1>Bitty Dashboard</h1>
+                    <p id="dashboardStatus" class="status">Checking your session...</p>
+                </div>
+                <div class="actions">
+                    <a class="outline" href="/">Portal</a>
+                    <button type="button" id="accountBtn">Account</button>
+                    <button type="button" id="logoutBtn">Sign Out</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel pink">
+            <h2>Book a Text Session</h2>
+            <p>Choose a session length. Checkout will collect your phone number so the texting flow can start after payment.</p>
+            <p class="consent-note">Clients provide their phone number during Stripe checkout. Entering a phone number and completing the purchase serves as explicit opt-in to receive text messages related to the paid peer support session.</p>
+            <div class="payment-grid">
+                <button class="primary-pay checkout-btn" id="buy30" type="button">Buy 30-Minute Session — $25</button>
+                <button class="secondary-pay checkout-btn" id="buy60" type="button">Buy 1-Hour Session — $45</button>
+            </div>
+            <p id="checkoutStatus" class="status"></p>
+        </section>
+
+        <section class="panel">
+            <h2>Start Texting</h2>
+            <div class="text-box">
+                <p id="textingStatus">After payment, you’ll get the next texting step based on the phone number entered at checkout.</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let currentUser = null;
+
+        function setCheckoutLoading(isLoading) {
+            document.querySelectorAll('.checkout-btn').forEach(function(button) {
+                button.disabled = isLoading;
+            });
+        }
+
+        function setStatus(message) {
+            document.getElementById('checkoutStatus').innerText = message;
+        }
+
+        function renderSession(user) {
+            currentUser = user;
+            const status = document.getElementById('dashboardStatus');
+            status.innerText = user
+                ? `Signed in as ${user.email}.`
+                : 'You are not signed in yet. Sign in before booking.';
+        }
+
+        async function startCheckout(duration) {
+            if (!currentUser) {
+                setStatus('Please sign in before booking a session.');
+                netlifyIdentity.open('login');
+                return;
+            }
+
+            setCheckoutLoading(true);
+            setStatus('Opening secure checkout...');
+
+            try {
+                const response = await fetch('/.netlify/functions/create-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        duration,
+                        email: currentUser.email
+                    })
+                });
+                const data = await response.json();
+
+                if (response.ok && data.url) {
+                    window.location.href = data.url;
+                    return;
+                }
+
+                setStatus(`Checkout error: ${data.error || 'Unable to start checkout.'}`);
+            } catch (error) {
+                console.error(error);
+                setStatus('Network error reaching checkout.');
+            } finally {
+                setCheckoutLoading(false);
+            }
+        }
+
+        document.getElementById('buy30').addEventListener('click', function() {
+            startCheckout('30min');
+        });
+
+        document.getElementById('buy60').addEventListener('click', function() {
+            startCheckout('60min');
+        });
+
+        document.getElementById('accountBtn').addEventListener('click', function() {
+            netlifyIdentity.open();
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            netlifyIdentity.logout();
+        });
+
+        netlifyIdentity.on('init', renderSession);
+        netlifyIdentity.on('login', function(user) {
+            netlifyIdentity.close();
+            renderSession(user);
+        });
+        netlifyIdentity.on('logout', function() {
+            window.location.href = "/";
+        });
+        netlifyIdentity.init();
+    </script>
+</body>
+</html>
