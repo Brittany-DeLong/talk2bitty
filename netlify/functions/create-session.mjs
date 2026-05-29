@@ -55,9 +55,7 @@ export default async function handler(req) {
     const duration = allowedDurations.has(body.duration) ? body.duration : '30min';
     const customerEmail = typeof body.email === 'string' ? body.email.trim() : '';
     const baseUrl = getBaseUrl(req);
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2026-02-25.clover',
-    });
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',

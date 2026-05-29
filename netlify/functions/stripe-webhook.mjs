@@ -85,9 +85,7 @@ export default async function handler(req) {
     return jsonResponse({ error: 'Stripe webhook is not configured yet.' }, 500);
   }
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2026-02-25.clover',
-  });
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const signature = req.headers.get('stripe-signature');
   const rawBody = await req.text();
 
