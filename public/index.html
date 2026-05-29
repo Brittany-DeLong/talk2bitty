@@ -391,10 +391,6 @@
 </head>
 <body>
     <div class="portal-layout">
-        <div style="text-align:center; margin-top:20px;">
-            <button onclick="window.netlifyIdentity && netlifyIdentity.open()">Sign In / Sign Up</button>
-        </div>
-
         <!-- HEADER NAME BAR -->
         <div class="identity-bar">
             <div class="logo-text">BITTY</div>
@@ -403,13 +399,12 @@
 
         <div class="auth-panel custom-block teal-glow">
             <div class="auth-row" id="authControls">
-                <input type="email" id="authEmail" autocomplete="email" placeholder="Email address">
-                <input type="password" id="authPassword" autocomplete="current-password" placeholder="Password">
-                <button class="auth-btn" id="loginBtn">Sign In</button>
-                <button class="auth-btn secondary" id="signupBtn">Create Account</button>
+                <button class="auth-btn" id="loginBtn" style="grid-column: span 2;">Sign In / Sign Up</button>
+                <button class="auth-btn secondary" id="anonymousBtn" style="grid-column: span 2;">Continue as Anonymous</button>
             </div>
-            <div class="auth-row" id="sessionControls" style="display: none; grid-template-columns: 1fr auto;">
+            <div class="auth-row" id="sessionControls" style="display: none; grid-template-columns: 1fr auto auto;">
                 <div class="auth-status" id="sessionSummary"></div>
+                <button class="auth-btn" id="dashboardBtn" style="background: var(--orange-action);">Dashboard</button>
                 <button class="auth-btn secondary" id="logoutBtn">Sign Out</button>
             </div>
             <div class="auth-status" id="authStatus"></div>
@@ -554,8 +549,16 @@
 
         function wireAuthControls() {
             document.getElementById('loginBtn').addEventListener('click', handleLogin);
-            document.getElementById('signupBtn').addEventListener('click', handleSignup);
+            document.getElementById('anonymousBtn').addEventListener('click', handleAnonymous);
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            
+            // Dashboard button handler
+            const dashboardBtn = document.getElementById('dashboardBtn');
+            if (dashboardBtn) {
+                dashboardBtn.addEventListener('click', function() {
+                    window.location.href = '/dashboard.html';
+                });
+            }
         }
 
         async function initializeIdentity() {
@@ -609,6 +612,11 @@
                 return;
             }
             netlifyIdentity.open('signup');
+        }
+
+        function handleAnonymous() {
+            setAuthStatus('Browsing anonymously. You can use the community wall and view content.');
+            // User can browse and interact anonymously - already supported by the wall feature
         }
 
         function handleLogout() {
