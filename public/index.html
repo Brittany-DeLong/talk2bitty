@@ -722,7 +722,7 @@
 
             card.innerHTML = `
                 <div style="font-size: 0.75rem; color: ${labelColor}; margin-bottom: 8px;"><strong>${authorName}</strong> • Just Now</div>
-                <div class="post-card-text">${copy}</div>
+                <div class="post-card-text"></div>
                 ${imgElement}
                 <div class="reaction-bar">
                     <button class="react-btn" onclick="incrementReaction(this)">👁️ <span class="count">0</span></button>
@@ -731,6 +731,7 @@
                     <button class="react-btn" onclick="incrementReaction(this)">💭 <span class="count">0</span></button>
                 </div>
             `;
+            card.querySelector('.post-card-text').textContent = copy;
 
             stream.insertBefore(card, stream.firstChild);
             document.getElementById('publicPostInput').value = '';
