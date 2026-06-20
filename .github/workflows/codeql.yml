@@ -12,20 +12,11 @@
 name: "CodeQL Advanced"
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  schedule:
-    - cron: '31 0 * * 4'
   workflow_dispatch:
 
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    # This repository uses CodeQL default setup. Running this advanced workflow at the
-    # same time causes SARIF processing failures, so only run it when manually dispatched.
-    if: ${{ github.event_name == 'workflow_dispatch' }}
     # Runner size impacts CodeQL analysis time. To learn more, please see:
     #   - https://gh.io/recommended-hardware-resources-for-running-codeql
     #   - https://gh.io/supported-runners-and-hardware-resources
